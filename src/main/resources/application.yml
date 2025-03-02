@@ -9,6 +9,3 @@ spring:
       enabled: true
   profiles:
     active: loadInitialData
-
-
-fgfghfghfghfgh
