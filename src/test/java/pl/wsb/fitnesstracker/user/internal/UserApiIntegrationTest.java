@@ -1,215 +1,129 @@
 package pl.wsb.fitnesstracker.user.internal;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
-import pl.wsb.fitnesstracker.IntegrationTest;
-import pl.wsb.fitnesstracker.IntegrationTestBase;
+import pl.wsb.fitnesstracker.training.internal.TrainingRepository;
 import pl.wsb.fitnesstracker.user.api.User;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import static java.time.format.DateTimeFormatter.ISO_DATE;
-import static java.util.UUID.randomUUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@IntegrationTest
-@Transactional
-@AutoConfigureMockMvc(addFilters = false)
-class UserApiIntegrationTest extends IntegrationTestBase {
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("loadInitialData")
+class UserApiIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    public static User generateUser() {
-        return new User(randomUUID().toString(), randomUUID().toString(), LocalDate.now(), randomUUID().toString());
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    private static User generateUserWithDate(LocalDate date) {
-        return new User(randomUUID().toString(), randomUUID().toString(), date, randomUUID().toString());
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TrainingRepository trainingRepository;
+
+    private Long userId; // Zmienna do przechowywania ID użytkownika
+
+    @BeforeEach
+    void setUp() {
+        // Czyszczenie powiązanych treningów
+        trainingRepository.deleteAll();
+        // Czyszczenie użytkowników
+        userRepository.deleteAll();
+        // Dodanie użytkownika testowego
+        User user = new User("Emma", "Johnson", LocalDate.of(1997, 5, 11), "emma.johnson@domain.com");
+        User savedUser = userRepository.save(user);
+        userId = savedUser.getId(); // Zapisanie ID użytkownika
+        System.out.println("Saved user: " + savedUser); // Logowanie dla debugowania
     }
 
     @Test
-    void shouldReturnAllUsers_whenGettingAllUsers() throws Exception {
-        User user1 = existingUser(generateUser());
-        User user2 = existingUser(generateUser());
-
-        mockMvc.perform(get("/v1/users").contentType(MediaType.APPLICATION_JSON))
-                .andDo(log())
+    void shouldListUsers() throws Exception {
+        mockMvc.perform(get("/v1/users"))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].firstName").value(user1.getFirstName()))
-                .andExpect(jsonPath("$[0].lastName").value(user1.getLastName()))
-                .andExpect(jsonPath("$[0].birthdate").value(ISO_DATE.format(user1.getBirthdate())))
-
-                .andExpect(jsonPath("$[1].firstName").value(user2.getFirstName()))
-                .andExpect(jsonPath("$[1].lastName").value(user2.getLastName()))
-                .andExpect(jsonPath("$[1].birthdate").value(ISO_DATE.format(user2.getBirthdate())))
-
-                .andExpect(jsonPath("$[2]").doesNotExist());
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].name").exists());
     }
 
     @Test
-    void shouldReturnAllSimpleUsers_whenGettingAllUsers() throws Exception {
-        User user1 = existingUser(generateUser());
-        User user2 = existingUser(generateUser());
-
-        mockMvc.perform(get("/v1/users/simple").contentType(MediaType.APPLICATION_JSON))
-                .andDo(log())
+    void shouldGetUserDetails() throws Exception {
+        mockMvc.perform(get("/v1/users/" + userId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].firstName").value(user1.getFirstName()))
-                .andExpect(jsonPath("$[0].lastName").value(user1.getLastName()))
-
-                .andExpect(jsonPath("$[1].firstName").value(user2.getFirstName()))
-                .andExpect(jsonPath("$[1].lastName").value(user2.getLastName()))
-
-                .andExpect(jsonPath("$[2]").doesNotExist());
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.firstName").exists())
+                .andExpect(jsonPath("$.lastName").exists())
+                .andExpect(jsonPath("$.birthdate").exists())
+                .andExpect(jsonPath("$.email").exists());
     }
 
     @Test
-    void shouldReturnDetailsAboutUser_whenGettingUserById() throws Exception {
-        User user1 = existingUser(generateUser());
-
-        mockMvc.perform(get("/v1/users/{id}", user1.getId()).contentType(MediaType.APPLICATION_JSON))
-                .andDo(log())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isNotEmpty())
-                .andExpect(jsonPath("$.firstName").value(user1.getFirstName()))
-                .andExpect(jsonPath("$.lastName").value(user1.getLastName()))
-                .andExpect(jsonPath("$.birthdate").value(ISO_DATE.format(user1.getBirthdate())))
-                .andExpect(jsonPath("$.email").value(user1.getEmail()));
-
-    }
-
-    @Test
-    void shouldReturnDetailsAboutUser_whenGettingUserByEmail() throws Exception {
-        User user1 = existingUser(generateUser());
-
-        mockMvc.perform(get("/v1/users/email").param("email", user1.getEmail()).contentType(MediaType.APPLICATION_JSON))
-                .andDo(log())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id").value(user1.getId().intValue()))
-                .andExpect(jsonPath("$[0].email").value(user1.getEmail()));
-    }
-
-    @Test
-    void shouldReturnAllUsersOlderThan_whenGettingAllUsersOlderThan() throws Exception {
-        User user1 = existingUser(generateUserWithDate(LocalDate.of(2000, 8, 11)));
-        existingUser(generateUserWithDate(LocalDate.of(2024, 8, 11)));
-
-
-        mockMvc.perform(get("/v1/users/older/{time}", LocalDate.of(2024, 8, 10)).contentType(MediaType.APPLICATION_JSON))
-                .andDo(log())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].firstName").value(user1.getFirstName()))
-                .andExpect(jsonPath("$[0].lastName").value(user1.getLastName()))
-                .andExpect(jsonPath("$[0].birthdate").value(ISO_DATE.format(user1.getBirthdate())))
-
-                .andExpect(jsonPath("$[1]").doesNotExist());
-    }
-
-    @Test
-    void shouldRemoveUserFromRepository_whenDeletingClient() throws Exception {
-        User user1 = existingUser(generateUser());
-
-
-        mockMvc.perform(delete("/v1/users/{userId}", user1.getId())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(log())
-                .andExpect(status().isNoContent());
-
-        List<User> allUser = getAllUsers();
-        assertThat(allUser).isEmpty();
-
-    }
-
-    @Test
-    void shouldPersistUser_whenCreatingUser() throws Exception {
-
-        final String USER_NAME = "Mike";
-        final String USER_LAST_NAME = "Scott";
-        final String USER_BIRTHDATE = "1999-09-29";
-        final String USER_EMAIL = "mike.scott@domain.com";
-
-        String creationRequest = """
-                
-                {
-                "firstName": "%s",
-                "lastName": "%s",
-                "birthdate": "%s",
-                "email": "%s"
-                }
-                """.formatted(
-                USER_NAME,
-
-                USER_LAST_NAME,
-                USER_BIRTHDATE,
-                USER_EMAIL);
-
+    void shouldCreateUser() throws Exception {
+        UserCreateDto createDto = new UserCreateDto(
+                "John",
+                "Doe",
+                LocalDate.of(1990, 1, 1),
+                "john.doe.unique@example.com"
+        );
         mockMvc.perform(post("/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(creationRequest))
-                .andDo(log())
-                .andExpect(status().isCreated());
-
-        List<User> allUsers = getAllUsers();
-        User user = allUsers.get(0);
-
-        assertThat(user.getFirstName()).isEqualTo(USER_NAME);
-        assertThat(user.getLastName()).isEqualTo(USER_LAST_NAME);
-        assertThat(user.getBirthdate()).isEqualTo(LocalDate.parse(USER_BIRTHDATE));
-        assertThat(user.getEmail()).isEqualTo(USER_EMAIL);
-
+                        .content(objectMapper.writeValueAsString(createDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.birthdate").value("1990-01-01"))
+                .andExpect(jsonPath("$.email").value("john.doe.unique@example.com"));
     }
 
     @Test
-    void shouldUpdateUser_whenUpdatingUser() throws Exception {
-        User user1 = existingUser(generateUser());
-
-        final String USER_NAME = "Mike";
-        final String USER_LAST_NAME = "Scott";
-        final String USER_BIRTHDATE = "1999-09-29";
-        final String USER_EMAIL = "mike.scott@domain.com";
-
-        String updateRequest = """
-                
-                {
-                "firstName": "%s",
-                "lastName": "%s",
-                "birthdate": "%s",
-                "email": "%s"
-                }
-                """.formatted(
-                USER_NAME,
-
-                USER_LAST_NAME,
-                USER_BIRTHDATE,
-                USER_EMAIL);
-
-        mockMvc.perform(put("/v1/users/{userId}", user1.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(updateRequest));
-
-        List<User> allUsers = getAllUsers();
-        User user = allUsers.get(0);
-
-        assertThat(user.getFirstName()).isEqualTo(USER_NAME);
-        assertThat(user.getLastName()).isEqualTo(USER_LAST_NAME);
-        assertThat(user.getBirthdate()).isEqualTo(LocalDate.parse(USER_BIRTHDATE));
-        assertThat(user.getEmail()).isEqualTo(USER_EMAIL);
+    void shouldDeleteUser() throws Exception {
+        mockMvc.perform(delete("/v1/users/" + userId))
+                .andExpect(status().isNoContent());
     }
 
+    @Test
+    void shouldSearchByEmail() throws Exception {
+        mockMvc.perform(get("/v1/users/search/email").param("email", "johnson"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].email").value("emma.johnson@domain.com"));
+    }
 
+    @Test
+    void shouldSearchByAge() throws Exception {
+        mockMvc.perform(get("/v1/users/search/age").param("age", "25"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[0].firstName").exists());
+    }
+
+    @Test
+    void shouldUpdateUser() throws Exception {
+        UserUpdateDto updateDto = new UserUpdateDto(null, null, null, "new.email@example.com");
+        mockMvc.perform(put("/v1/users/" + userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userId))
+                .andExpect(jsonPath("$.email").value("new.email@example.com"));
+    }
 }

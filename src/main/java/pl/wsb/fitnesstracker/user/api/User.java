@@ -38,12 +38,26 @@ public class User {
             final String lastName,
             final LocalDate birthdate,
             final String email) {
-
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthdate = birthdate;
         this.email = email;
     }
 
-}
+    // Dodane settery
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
 
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+}
