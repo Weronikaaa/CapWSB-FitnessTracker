@@ -17,11 +17,21 @@ spring:
       mode: never  # InitialDataLoader zastępuje data.sql
   profiles:
     active: loadInitialData
+  mail:
+    host: localhost
+    port: 2525
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 server:
   port: 8081
 logging:
   level:
-    org.springframework: DEBUG
+    org.springframework: TRACE
     org.hibernate: DEBUG
-    pl.wsb.fitnesstracker: DEBUG
-
+    pl.wsb.fitnesstracker: TRACE

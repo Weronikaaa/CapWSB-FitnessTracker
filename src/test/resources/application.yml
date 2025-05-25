@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: "jdbc:h2:mem:testdb"
+    driver-class-name: "org.h2.Driver"
+    username: "sa"
+    password: ""
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  sql:
+    init:
+      mode: never  # InitialDataLoader zastępuje data.sql
+  profiles:
+    active: loadInitialData
+  mail:
+    host: localhost
+    port: 2525
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+server:
+  port: 8081
+logging:
+  level:
+    org.springframework: TRACE
+    org.hibernate: DEBUG
+    pl.wsb.fitnesstracker: TRACE
