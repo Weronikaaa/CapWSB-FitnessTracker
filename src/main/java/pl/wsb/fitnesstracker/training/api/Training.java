@@ -10,6 +10,9 @@ import pl.wsb.fitnesstracker.user.api.User;
 
 import java.util.Date;
 
+/**
+ * Entity representing a training session.
+ */
 @Entity
 @Table(name = "trainings")
 @Getter
@@ -41,6 +44,16 @@ public class Training {
     @Column(name = "average_speed")
     private double averageSpeed;
 
+    /**
+     * Constructs a new Training instance.
+     *
+     * @param user         the user associated with the training
+     * @param startTime    the start time of the training
+     * @param endTime      the end time of the training
+     * @param activityType the type of activity
+     * @param distance     the distance covered during the training
+     * @param averageSpeed the average speed during the training
+     */
     public Training(
             final User user,
             final Date startTime,
@@ -54,5 +67,26 @@ public class Training {
         this.activityType = activityType;
         this.distance = distance;
         this.averageSpeed = averageSpeed;
+    }
+
+    // Settery dla aktualizacji
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    public void setAverageSpeed(double averageSpeed) {
+        this.averageSpeed = averageSpeed;
+    }
+
+    public void setStartTime(Date startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(Date endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setActivityType(ActivityType activityType) {
+        this.activityType = activityType;
     }
 }

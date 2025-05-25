@@ -1,0 +1,132 @@
+{
+	"info": {
+		"_postman_id": "c92f913c-3b01-4da9-bde7-159939bd2253",
+		"name": "FitnessTracker API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42758508"
+	},
+	"item": [
+		{
+			"name": "lab_2",
+			"item": [
+				{
+					"name": "Żądanie 1: Lista użytkowników (GET /v1/users)",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Żądanie 2: Szczegóły użytkownika (GET /v1/users/{id})",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Żądanie 3: Tworzenie użytkownika (POST /v1/users)",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Żądanie 4: Wyszukiwanie po e-mailu (GET /v1/users/search/email)",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Żądanie 5: Wyszukiwanie po wieku (GET /v1/users/search/age)",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Żądanie 6: Aktualizacja użytkownika (PUT /v1/users/{id})",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "lab_3",
+			"item": [
+				{
+					"name": "GET /v1/trainings",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "GET /v1/trainings/{id}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "POST /v1/trainings?userId={userId}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /v1/trainings/{id}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /v1/trainings/{id}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "GET /v1/trainings/user/{userId}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "GET /v1/trainings/ended-after?date={date}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "GET /v1/trainings/activity?activityType={type}",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
